@@ -33,3 +33,12 @@ jq -n --slurpfile schema movies-raw.avsc  '$schema | {schema: tostring}' | curl 
 
 The output should be an ID. Remember the ID you got, so you can use it when producing and consuming events.
 
+4. Now it is time to produce an event with our schema. We'll use the REST Proxy for that. 
+You can see few examples for using Rest Proxy here: https://docs.confluent.io/current/kafka-rest/docs/intro.html#produce-and-consume-avro-messages
+And note that you don't have to include the entire schema in every single message, since the schema is registered, you can just include the ID: https://docs.confluent.io/current/kafka-rest/docs/api.html#post--topics-(string-topic_name)
+
+For example, to produce to the movies topic, we can run:
+```
+curl -X POST -H "Content-Type: application/vnd.kafka.avro.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"value_schema_id": 1, "records": [{"value": {"movie":{"movie_id": 1, "title": "Ready Player One", "release_year":2018}}}]}'  http://localhost:8082/topics/movies-raw
+```
+
