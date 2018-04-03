@@ -33,12 +33,25 @@ jq -n --slurpfile schema movies-raw.avsc  '$schema | {schema: tostring}' | curl 
 
 The output should be an ID. Remember the ID you got, so you can use it when producing and consuming events.
 
-4. Now it is time to produce an event with our schema. We'll use the REST Proxy for that. 
-You can see few examples for using Rest Proxy here: https://docs.confluent.io/current/kafka-rest/docs/intro.html#produce-and-consume-avro-messages
-And note that you don't have to include the entire schema in every single message, since the schema is registered, you can just include the ID: https://docs.confluent.io/current/kafka-rest/docs/api.html#post--topics-(string-topic_name)
-
-For example, to produce to the movies topic, we can run:
+4. Now it is time to produce an event with our schema. We'll use the REST Proxy for that.  
+You can see few examples for using Rest Proxy here: https://docs.confluent.io/current/kafka-rest/docs/intro.html#produce-and-consume-avro-messages  
+And note that you don't have to include the entire schema in every single message, since the schema is registered, you can just include the ID: https://docs.confluent.io/current/kafka-rest/docs/api.html#post--topics-(string-topic_name)  
+  
+For example, to produce to the movies topic, we can run:  
 ```
 curl -X POST -H "Content-Type: application/vnd.kafka.avro.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"value_schema_id": 1, "records": [{"value": {"movie":{"movie_id": 1, "title": "Ready Player One", "release_year":2018}}}]}'  http://localhost:8082/topics/movies-raw
 ```
+5. Lets try to consume some messages. I'll use the simple consumer (i.e. read a specific set of messages from a specific partition, rather than subscribe to all new messages in a topic) because it is simple. You can see examples for using the new consumer API in the documentation linked above.
 
+```
+curl -H "Accept: application/vnd.kafka.avro.v1+json" http://localhost:8082/topics/movies-raw/partitions/0/messages?offset=0&count=10
+```
+
+6. Now is the fun part. Make some changes to the schema - add fields, remove fields or modify types. Is the result compatible? Lets check with schema registry:
+
+```
+jq -n --slurpfile schema movies-raw-new.avsc  '$schema | {schema: tostring}' |curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+    --data @- http://localhost:8081/compatibility/subjects/movies-raw-value/versions/latest
+```
+
+7. Use the REST Proxy to produce and consume messages with modified schemas, both compatible and in-compatible. What happens?
