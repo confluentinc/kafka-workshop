@@ -108,27 +108,3 @@ We assume you already have the environment up and running from the first exercis
 6. Time permitting, present your final architecture to the class. Explain how you adjudicated each stream/table duality and what streaming computations you planned.
 
 ## Exercise 4: Enriching Data with KSQL
-
-
-head -n1 ratings-json.js | kafkacat -b localhost:9092 -t ratings -P
-head -n1 movies-json.js  | kafkacat -b localhost:9092 -t movies -P
-SET 'auto.offset.reset' = 'earliest';
-
-CREATE STREAM movies_src (movie_id LONG, title VARCHAR, release_year INT, country VARCHAR, rating DOUBLE, cinematographer VARCHAR, genres ARRAY<VARCHAR>, directors ARRAY<VARCHAR>, composers ARRAY<varchar>, screenwriters ARRAY<VARCHAR>, production_companies ARRAY<VARCHAR>) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='movies');
-
-CREATE STREAM movies_rekeyed AS SELECT * FROM movies_src PARTITION BY movie_id;
-
-kafkacat -C  -K: -b localhost:9092 -f 'Key:    %k\nValue:  %s\n' -t movies
-kafkacat -C  -K: -b localhost:9092 -f 'Key:    %k\nValue:  %s\n' -t MOVIES_REKEYED2
-
-CREATE TABLE movies_ref (movie_id LONG, title VARCHAR, release_year INT, country VARCHAR, rating DOUBLE, cinematographer VARCHAR, genres ARRAY<VARCHAR>, directors ARRAY<VARCHAR>, composers ARRAY<varchar>, screenwriters ARRAY<VARCHAR>, production_companies ARRAY<VARCHAR>) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='MOVIES_REKEYED', KEY='movie_id');
-
-CREATE STREAM ratings (movie_id LONG, rating DOUBLE) WITH (VALUE_FORMAT = 'JSON', KAFKA_TOPIC='ratings');
-
-cat movies-json.js | kafkacat -b localhost:9092 -t movies -P
-
-SELECT m.title, m.release_year, r.rating FROM ratings r LEFT OUTER JOIN movies_ref m on r.movie_id = m.movie_id;
-
-head -n1000 ratings-json.js | kafkacat -b localhost:9092 -t ratings -P
-
-CREATE TABLE movie_ratings AS SELECT m.title, SUM(r.rating)/COUNT(r.rating) AS avg_rating, COUNT(r.rating) AS num_ratings FROM ratings r LEFT OUTER JOIN movies_ref m ON m.movie_id = r.movie_id GROUP BY m.title;
