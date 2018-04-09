@@ -145,10 +145,12 @@ cd streams-demo
 ./gradlew streamJsonRatings
 ```
 
-8. Attempt to join ratings to the movie data with `SELECT m.title, m.release_year, r.rating FROM ratings r LEFT OUTER JOIN movies_ref m on r.movie_id = m.movie_id;`. Note the nulls! We need more movies in the reference stream.
+8. Create a stream to represent the ratings: `CREATE STREAM ratings (movie_id LONG, rating DOUBLE) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='ratings');`
 
-8. `cat` the rest of the `movies-json.js` file into the stream. Notice that the join starts working!
+9. Attempt to join ratings to the movie data with `SELECT m.title, m.release_year, r.rating FROM ratings r LEFT OUTER JOIN movies_ref m on r.movie_id = m.movie_id;`. Note the nulls! We need more movies in the reference stream.
 
-9. Create a table containing average ratings as follows: `CREATE TABLE movie_ratings AS SELECT m.title, SUM(r.rating)/COUNT(r.rating) AS avg_rating, COUNT(r.rating) AS num_ratings FROM ratings r LEFT OUTER JOIN movies_ref m ON m.movie_id = r.movie_id GROUP BY m.title;`
+10. `cat` the rest of the `movies-json.js` file into the stream. Notice that the join starts working!
 
-10. Select from that table and inspect the average ratings. Do you agree with them? Discuss. (If you want the table to stop updating, kill the Gradle task that is streaming the ratings—it's been going this whole time.)
+11. Create a table containing average ratings as follows: `CREATE TABLE movie_ratings AS SELECT m.title, SUM(r.rating)/COUNT(r.rating) AS avg_rating, COUNT(r.rating) AS num_ratings FROM ratings r LEFT OUTER JOIN movies_ref m ON m.movie_id = r.movie_id GROUP BY m.title;`
+
+12. Select from that table and inspect the average ratings. Do you agree with them? Discuss. (If you want the table to stop updating, kill the Gradle task that is streaming the ratings—it's been going this whole time.)
