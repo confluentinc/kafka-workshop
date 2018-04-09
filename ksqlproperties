@@ -1,0 +1,8 @@
+bootstrap.servers=kafka1:9092
+application.id=qconai-workshop
+listeners=http://localhost:8080
+cache.max.bytes.buffering=0
+auto.offset.reset=earliest
+
+# Schema Registry using HTTPS
+ksql.schema.registry.url=http://schemaregistry:8081

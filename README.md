@@ -109,3 +109,34 @@ We assume you already have the environment up and running from the first exercis
 6. Time permitting, present your final architecture to the class. Explain how you adjudicated each stream/table duality and what streaming computations you planned.
 
 ## Exercise 4: Enriching Data with KSQL
+
+1. In separate terminal tabs, keep the worker container from exercise #1 running, and run a second container with the following steps:
+```
+$ docker-compose run ksql bash
+root@929aa798b628:/# ksql-cli local --properties-file=ksqlserver.properties
+```
+
+2. In the worker container, see the movies data with `head -n 1 streams-demo/data/movies-json.js  | kafkacat -b kafka1:9092 -t movies-raw -P`
+
+
+3. In the KSQL container, create a stream around the raw movie data: `CREATE STREAM movies_src (movie_id LONG, title VARCHAR, release_year INT) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='movies-raw');`
+
+4. As you can see by selecting the records from that stream, the key is null. Re-key it with `CREATE STREAM movies_rekeyed AS SELECT * FROM movies_src PARTITION BY movie_id;`
+
+5. Run a non-persistent select on `movies_rekeyed` in the KSQL window, then stream ten more movie records into the `movies-raw` topic. Watch them appear in the rekeyed stream. 
+
+6. Turn the movies into a table of reference data with `CREATE TABLE movies_ref (movie_id LONG, title VARCHAR, release_year INT) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='MOVIES_REKEYED', KEY='movie_id');`
+
+7. In a new worker container (another terminal tab with `docker-compose run worker bash`), do the following:
+```
+cd streams-demo
+./gradlew streamJsonRatings
+```
+
+8. Attempt to join ratings to the movie data with `SELECT m.title, m.release_year, r.rating FROM ratings r LEFT OUTER JOIN movies_ref m on r.movie_id = m.movie_id;`. Note the nulls! We need more movies in the reference stream.
+
+8. `cat` the rest of the `movies-json.js` file into the stream. Notice that the join starts working!
+
+9. Create a table containing average ratings as follows: `CREATE TABLE movie_ratings AS SELECT m.title, SUM(r.rating)/COUNT(r.rating) AS avg_rating, COUNT(r.rating) AS num_ratings FROM ratings r LEFT OUTER JOIN movies_ref m ON m.movie_id = r.movie_id GROUP BY m.title;`
+
+10. Select from that table and inspect the average ratings. Do you agree with them? Discuss. (If you want the table to stop updating, kill the Gradle task that is streaming the ratings—it's been going this whole time.)
