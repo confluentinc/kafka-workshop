@@ -1,7 +1,24 @@
-# qcon-ai-workshop
-Exercises for QCon Workshop
+# QCon.ai Workshop
 
-## Exercise 2 - Schemas, Schema Registry and Compatibility
+Exercises for the QCon Workshop
+
+## Exercise 0: Getting Ready
+
+If you're reading this, you probably know where to find the repo with the instructions, since this is it! Now that you're here, follow these instructions to get ready for the workshop:
+
+1. Install [Docker Compose](https://docs.docker.com/compose/install/) on your system. There are Mac, Windows, and Linux options available at the link.
+
+2. Clone this repo by typing `git clone https://github.com/confluentinc/qcon-ai-workshop` from a terminal.
+
+2. From the `qcon-ai-workshop` directory (which you just cloned), run `docker-compose pull`. This will kick off no small amount of downloading. Get this primed before Exercise 1 begins later on!
+
+## Exercise 1: Producing and Consuming to Kafka topics
+
+1. Run the workshop application by typing `docker-compose up -d` from the project root. This will start up a Kafka broker, a Zookeeper node, and a KSQL container, and a worker container. The "worker" is a helper container with some data and tools in it.
+
+2. Get into the worker container by typing `docker-compose run worker bash`. This will get you a terminal inside the container.
+
+## Exercise 2: Schemas, Schema Registry and Schema Compatibility
 In this exercise we'll design an Avro schema, registry it in the Confluent Schema Registry, produce and consume events using this schema, and then modify the schema in compatible and incompatible ways.
 
 We assume you already have the environment up and running from the first exercise.
@@ -56,3 +73,8 @@ We assume you already have the environment up and running from the first exercis
    ```
 
 7. Use the REST Proxy to produce and consume messages with modified schemas, both compatible and in-compatible. What happens?
+
+
+## Exercise 3: Your Own Schema Design
+
+## Exercise 4: Enriching Data with KSQL
