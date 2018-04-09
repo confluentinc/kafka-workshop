@@ -32,7 +32,8 @@ cat movies-json.js | while read in;
 do
 echo $in | kafkacat -b kafka1:9092 -P -t movies-raw
 sleep 1
-done```
+done
+```
 
 8. Be sure to finish up by dumping all movie data into the `movies-raw` topic with `cat movies-json.js | kafkacat -b kafka1:9092 -P -t movies-raw`.
 
