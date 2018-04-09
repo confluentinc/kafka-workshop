@@ -10,7 +10,7 @@ If you're reading this, you probably know where to find the repo with the instru
 
 2. Clone this repo by typing `git clone https://github.com/confluentinc/qcon-ai-workshop` from a terminal.
 
-2. From the `qcon-ai-workshop` directory (which you just cloned), run `docker-compose pull`. This will kick off no small amount of downloading. Get this primed before Exercise 1 begins later on!
+3. From the `qcon-ai-workshop` directory (which you just cloned), run `docker-compose pull`. This will kick off no small amount of downloading. Get this primed before Exercise 1 begins later on!
 
 ## Exercise 1: Producing and Consuming to Kafka topics
 
