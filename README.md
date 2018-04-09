@@ -18,6 +18,24 @@ If you're reading this, you probably know where to find the repo with the instru
 
 2. Get into the worker container by typing `docker-compose run worker bash`. This will get you a terminal inside the container.
 
+3. Verify that you have connectivity to your Kafka cluster by typing `kafkacat -b kafka1:9092 -L`. This will list all cluster metadata, which at this point isn't much.
+
+4. Produce a single record into the `movies-raw` topic from the `movies-json.js` file. Hint: use `tail -n 1` to pipe a single record to `kafkacat`, and check out the `-P` and `-t` command line switches at `kafkacat --help`.
+
+5. Once you've produced a record to the topic, open up a new terminal tab or window and consume it using `kafkacat` and the `-C` switch.
+
+6. Go back to the producer terminal tab and send two records to the topic using `tail -n 2`. (It's okay that one of these is a duplicate.)
+
+7. For fun, keep the consumer tab visible and run this shell script in the producer tab:
+```bash
+cat movies-json.js | while read in;
+do
+echo $in | kafkacat -b kafka1:9092 -P -t movies-raw
+sleep 1
+done```
+
+8. Be sure to finish up by dumping all movie data into the `movies-raw` topic with `cat movies-json.js | kafkacat -b kafka1:9092 -P -t movies-raw`.
+
 ## Exercise 2: Schemas, Schema Registry and Schema Compatibility
 In this exercise we'll design an Avro schema, registry it in the Confluent Schema Registry, produce and consume events using this schema, and then modify the schema in compatible and incompatible ways.
 
@@ -77,4 +95,40 @@ We assume you already have the environment up and running from the first exercis
 
 ## Exercise 3: Your Own Schema Design
 
+1. Break into groups of two to four people. In your groups, discuss some simple business problems within each person's domain. 
+
+2. Agree on one business problem to model. Draw a simple entity diagram of it, and make a list of operations your application must perform on the model. For example, if your business is retail, you might make a simple model of inventory, with entities for location, item, and supplier, plus operations for receiving, transferring, selling, and analysis.
+
+3. Sketch out a simple application to provide a front end and necessary APIs for the system. For each service in the application, indicate what interface it provides (web front-end, HTTP API, etc.) and what computation it does over the data.
+
+4. Some of the entities in your model are truly static, and some are not. Revisit your entity model and decide which entities are should be streams and which are truly tables.
+
+5. Re-draw your diagram from step three with the appropriate tables replaced by streams. For each service in the application, keep its interface constant, but re-consider what computation it does over the data.
+
+6. Time permitting, present your final architecture to the class. Explain how you adjudicated each stream/table duality and what streaming computations you planned.
+
 ## Exercise 4: Enriching Data with KSQL
+
+
+head -n1 ratings-json.js | kafkacat -b localhost:9092 -t ratings -P
+head -n1 movies-json.js  | kafkacat -b localhost:9092 -t movies -P
+SET 'auto.offset.reset' = 'earliest';
+
+CREATE STREAM movies_src (movie_id LONG, title VARCHAR, release_year INT, country VARCHAR, rating DOUBLE, cinematographer VARCHAR, genres ARRAY<VARCHAR>, directors ARRAY<VARCHAR>, composers ARRAY<varchar>, screenwriters ARRAY<VARCHAR>, production_companies ARRAY<VARCHAR>) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='movies');
+
+CREATE STREAM movies_rekeyed AS SELECT * FROM movies_src PARTITION BY movie_id;
+
+kafkacat -C  -K: -b localhost:9092 -f 'Key:    %k\nValue:  %s\n' -t movies
+kafkacat -C  -K: -b localhost:9092 -f 'Key:    %k\nValue:  %s\n' -t MOVIES_REKEYED2
+
+CREATE TABLE movies_ref (movie_id LONG, title VARCHAR, release_year INT, country VARCHAR, rating DOUBLE, cinematographer VARCHAR, genres ARRAY<VARCHAR>, directors ARRAY<VARCHAR>, composers ARRAY<varchar>, screenwriters ARRAY<VARCHAR>, production_companies ARRAY<VARCHAR>) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='MOVIES_REKEYED', KEY='movie_id');
+
+CREATE STREAM ratings (movie_id LONG, rating DOUBLE) WITH (VALUE_FORMAT = 'JSON', KAFKA_TOPIC='ratings');
+
+cat movies-json.js | kafkacat -b localhost:9092 -t movies -P
+
+SELECT m.title, m.release_year, r.rating FROM ratings r LEFT OUTER JOIN movies_ref m on r.movie_id = m.movie_id;
+
+head -n1000 ratings-json.js | kafkacat -b localhost:9092 -t ratings -P
+
+CREATE TABLE movie_ratings AS SELECT m.title, SUM(r.rating)/COUNT(r.rating) AS avg_rating, COUNT(r.rating) AS num_ratings FROM ratings r LEFT OUTER JOIN movies_ref m ON m.movie_id = r.movie_id GROUP BY m.title;

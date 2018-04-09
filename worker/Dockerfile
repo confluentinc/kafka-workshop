@@ -1,5 +1,7 @@
 FROM ubuntu
 
+COPY data/ .
+
 RUN \
   sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list && \
   apt-get update && \
@@ -25,9 +27,7 @@ CMD ["bash"]
 
 RUN apt-get install -y git
 RUN git clone https://github.com/tlberglund/streams-movie-demo streams-demo
-RUN cd streams-movie-demo && ./gradlew build
-
-#RUN apt-get install KAFKA_AUTO_CREATE_TOPICS_ENABLE
+RUN cd streams-demo && ./gradlew build
 
 ARG COMMIT_ID=unknown
 LABEL io.confluent.docker.git.id=$COMMIT_ID
@@ -60,5 +60,3 @@ RUN echo "Building kafkacat ....." \
         krb5-user \
         krb5-config \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-COPY data/ .

@@ -4,19 +4,20 @@ services:
 
   worker:
     image: tlberglund/qconai
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
     depends_on:
       - kafka1
       - ksql
 
   ksql:
-    image: confluentinc/ksql-cli
+    image: confluentinc/ksql-cli:0.5
     depends_on:
       - kafka1
     environment:
       STREAMS_BOOTSTRAP_SERVERS: kafka1:9092
       STREAMS_SCHEMA_REGISTRY_HOST: schemaregistry
       STREAMS_SCHEMA_REGISTRY_PORT: 8081
-
 
   # database:
   #    image: mysql
