@@ -42,6 +42,12 @@ In this exercise we'll design an Avro schema, registry it in the Confluent Schem
 
 We assume you already have the environment up and running from the first exercise.
 
+0. Clean up the topic you created in the previous exercise as follows:
+```
+$ docker-compose exec kafka1 bash
+root@kafka1:/# kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-raw
+```
+
 1. Think of a stream processing use-case that interests you.
 
    What kind of data do you have? Which topics will you need? select one of the topics and decide on key and value schema for records in the topic. How did the choice of topics influence the event schema? What trade-offs did you make in designing the data model?
@@ -109,6 +115,12 @@ We assume you already have the environment up and running from the first exercis
 6. Time permitting, present your final architecture to the class. Explain how you adjudicated each stream/table duality and what streaming computations you planned.
 
 ## Exercise 4: Enriching Data with KSQL
+
+0. Clean up the topic you created in exercise 2 as follows:
+```
+$ docker-compose exec kafka1 bash
+root@kafka1:/# kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-raw
+```
 
 1. In separate terminal tabs, keep the worker container from exercise #1 running, and run a second container with the following steps:
 ```
