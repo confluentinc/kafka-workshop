@@ -20,7 +20,7 @@ If you're reading this, you probably know where to find the repo with the instru
 
 3. Verify that you have connectivity to your Kafka cluster by typing `kafkacat -b kafka1:9092 -L`. This will list all cluster metadata, which at this point isn't much.
 
-4. Produce a single record into the `movies-raw` topic from the `movies-json.js` file. Hint: use `tail -n 1` to pipe a single record to `kafkacat`, and check out the `-P` and `-t` command line switches at `kafkacat --help`.
+4. Produce a single record into the `movies-raw` topic from the `streams-demo/data/movies-json.js` file. Hint: use `tail -n 1` to pipe a single record to `kafkacat`, and check out the `-P` and `-t` command line switches at `kafkacat --help`.
 
 5. Once you've produced a record to the topic, open up a new terminal tab or window and consume it using `kafkacat` and the `-C` switch.
 
@@ -28,7 +28,7 @@ If you're reading this, you probably know where to find the repo with the instru
 
 7. For fun, keep the consumer tab visible and run this shell script in the producer tab:
 ```bash
-cat movies-json.js | while read in;
+cat streams-demo/data/movies-json.js | while read in;
 do
 echo $in | kafkacat -b kafka1:9092 -P -t movies-raw
 sleep 1
