@@ -1,6 +1,6 @@
-# QCon.ai Workshop
+# Kafka Workshop
 
-Exercises for the QCon Workshop
+Exercises for the Kafka Workshop
 
 ## Exercise 0: Getting Ready
 
@@ -8,9 +8,9 @@ If you're reading this, you probably know where to find the repo with the instru
 
 1. Install [Docker Compose](https://docs.docker.com/compose/install/) on your system. There are Mac, Windows, and Linux options available at the link.
 
-2. Clone this repo by typing `git clone https://github.com/confluentinc/qcon-ai-workshop` from a terminal.
+2. Clone this repo by typing `git clone https://github.com/confluentinc/kafka-workshop` from a terminal.
 
-3. From the `qcon-ai-workshop` directory (which you just cloned), run `docker-compose pull`. This will kick off no small amount of downloading. Get this primed before Exercise 1 begins later on!
+3. From the `kafka-workshop` directory (which you just cloned), run `docker-compose pull`. This will kick off no small amount of downloading. Get this primed before Exercise 1 begins later on!
 
 ## Exercise 1: Producing and Consuming to Kafka topics
 
