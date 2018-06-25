@@ -56,7 +56,7 @@ root@kafka1:/# kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-r
 
    You can see the schema definition rules for Avro [here](https://avro.apache.org/docs/1.8.1/spec.html#schemas). If you are stuck coming up with your own schema, you can find a schema that we created for our movies topic in `movies-raw.avsc`.
 
-3. Now, lets register the schema in the Confluent Schema Registry.
+3. Now, let's register the schema in the Confluent Schema Registry.
 
    Instructions can be found in [Schema Registry documentation](https://docs.confluent.io/current/schema-registry/docs/intro.html#quickstart).
    We are registering a schema for values, not keys. And in my case, the records will belong to topic `movies-raw`, so I'll register the schema under the subject `movies-raw-value`.
@@ -83,7 +83,7 @@ root@kafka1:/# kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-r
    curl -X POST -H "Content-Type: application/vnd.kafka.avro.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"value_schema_id": 1, "records": [{"value": {"movie":{"movie_id": 1, "title": "Ready Player One", "release_year":2018}}}]}'  http://localhost:8082/topics/movies-raw
    ```
   
-5. Lets try to consume some messages. 
+5. Let's try to consume some messages.
 
    I'll use the simple consumer (i.e. read a specific set of messages from a specific partition, rather than subscribe to all new messages in a topic) because it is simple. You can see examples for using the new consumer API in the documentation linked above.
    ```
@@ -92,7 +92,7 @@ root@kafka1:/# kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-r
 
 6. Now is the fun part. 
 
-   Make some changes to the schema - add fields, remove fields or modify types. Is the result compatible? Lets check with schema registry:
+   Make some changes to the schema - add fields, remove fields or modify types. Is the result compatible? Let's check with schema registry:
    ```
    jq -n --slurpfile schema movies-raw-new.avsc  '$schema | {schema: tostring}' |curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data @- http://localhost:8081/compatibility/subjects/movies-raw-value/versions/latest
    ```
