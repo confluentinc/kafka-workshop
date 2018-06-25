@@ -125,7 +125,7 @@ root@kafka1:/# kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-r
 1. In separate terminal tabs, keep the worker container from exercise #1 running, and run a second container with the following steps:
 ```
 $ docker-compose run ksql bash
-root@929aa798b628:/# ksql-cli local --properties-file=ksqlserver.properties
+root@929aa798b628:/# ksql --properties-file=ksqlserver.properties
 ```
 
 2. In the worker container, see the movies data with `head -n 1 streams-demo/data/movies-json.js  | kafkacat -b kafka1:9092 -t movies-raw -P`
