@@ -38,7 +38,7 @@ done
 8. Be sure to finish up by dumping all movie data into the `movies-raw` topic with `cat movies-json.js | kafkacat -b kafka1:9092 -P -t movies-raw`.
 
 ## Exercise 2: Schemas, Schema Registry and Schema Compatibility
-In this exercise we'll design an Avro schema, registry it in the Confluent Schema Registry, produce and consume events using this schema, and then modify the schema in compatible and incompatible ways.
+In this exercise we'll design an Avro schema, register it in the Confluent Schema Registry, produce and consume events using this schema, and then modify the schema in compatible and incompatible ways.
 
 We assume you already have the environment up and running from the first exercise.
 
