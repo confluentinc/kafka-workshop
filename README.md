@@ -87,7 +87,7 @@ root@kafka1:/# kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-r
 
    I'll use the simple consumer (i.e. read a specific set of messages from a specific partition, rather than subscribe to all new messages in a topic) because it is simple. You can see examples for using the new consumer API in the documentation linked above.
    ```
-   curl -H "Accept: application/vnd.kafka.avro.v1+json" http://localhost:8082/topics/movies-raw/partitions/0/messages?offset=0&count=10
+   curl -H "Accept: application/vnd.kafka.avro.v1+json" "http://localhost:8082/topics/movies-raw/partitions/0/messages?offset=0&count=10"
    ```
 
 6. Now is the fun part. 
