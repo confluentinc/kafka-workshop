@@ -1,4 +1,3 @@
-USE WORKSHOP;
 DROP TABLE IF EXISTS movies;
 CREATE TABLE movies(
   id                   INTEGER NOT NULL PRIMARY KEY,

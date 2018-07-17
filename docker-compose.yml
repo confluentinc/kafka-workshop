@@ -25,27 +25,18 @@ services:
     #   STREAMS_SCHEMA_REGISTRY_PORT: 8081
 
   database:
-     image: mysql
-     command: mysqld --user=root --verbose
-     volumes:
-       - ./data/:/data
-     # volumes:
-     #   - ./dbcreation.sql:/tmp/dbcreation.sql
-     #   - ./import.sh:/tmp/import.sh
-     ports:
-       - "3306:3306"
-     environment:
-       MYSQL_ROOT_PASSWORD: "monkey"
-       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-       MYSQL_DATABASE: "workshop"
-       MYSQL_USER: "user"
-       MYSQL_PASSWORD: "password"
-       MYSQL_ROOT_PASSWORD: "root"
-       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    image: postgres
+    volumes:
+     - ./data/schema.sql:/docker-entrypoint-initdb.d/z99_dump.sql
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=WORKSHOP
        
        
   zookeeper:
-    image: confluentinc/cp-zookeeper:4.1.0
+    image: confluentinc/cp-zookeeper:4.1.1
     restart: always
     environment:
       ZOOKEEPER_SERVER_ID: 1
@@ -54,16 +45,13 @@ services:
       ZOOKEEPER_SERVERS: "zookeeper:22888:23888"
     ports:
       - "2181:2181"
-      
-      
+            
   connect:
-    image: confluentinc/cp-kafka-connect:4.1.0
-    hostname: connect
+    image: confluentinc/cp-kafka-connect:4.1.1
     depends_on:
       - zookeeper
       - kafka1
       - schemaregistry
-      - restproxy
     ports:
       - "8083:8083"
     environment:
@@ -74,9 +62,9 @@ services:
       CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
       CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
       CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
-      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://kafka-schema-registry:8081'
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schemaregistry:8081'
       CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://kafka-schema-registry:8081'
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schemaregistry:8081'
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
@@ -85,12 +73,11 @@ services:
       CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
-      CONNECT_PLUGIN_PATH: "/usr/share/java/kafka-connect-jdbc"
+      CONNECT_PLUGIN_PATH: '/usr/share/java'
       
       
   kafka1:
-    image: confluentinc/cp-enterprise-kafka:4.1.0
-    hostname: kafka1
+    image: confluentinc/cp-enterprise-kafka:4.1.1
     depends_on:
       - zookeeper
     ports:
@@ -112,7 +99,7 @@ services:
       
       
   schemaregistry:
-    image: confluentinc/cp-schema-registry:4.1.0
+    image: confluentinc/cp-schema-registry:4.1.1
     restart: always
     depends_on:
       - zookeeper
@@ -125,7 +112,7 @@ services:
       
       
   restproxy:
-    image: confluentinc/cp-kafka-rest:4.1.0
+    image: confluentinc/cp-kafka-rest:4.1.1
     restart: always
     depends_on:
       - kafka1
