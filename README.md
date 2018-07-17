@@ -43,7 +43,7 @@ done
 1. Run the MySQL command line client inside the image with `mysql -u user -ppassword`
 2. At the `mysql>` prompt, type `USE workshop;`. (The workshop database has already been created for you.)
 3. Load the schema and data by typing `\. /data/schema.sql` at the `mysql>` prompt.
-4. From the root project dir: `curl -i -X POST -H 'Content-Type: application/json' -d @connect/mysql-source.json http://localhost:8083/connectors`
+4. Exit the container. From the root project dir: `curl -i -X POST -H 'Content-Type: application/json' -d @connect/mysql-source.json http://localhost:8083/connectors`
 
 ## Exercise 2: Schemas, Schema Registry and Schema Compatibility
 In this exercise we'll design an Avro schema, register it in the Confluent Schema Registry, produce and consume events using this schema, and then modify the schema in compatible and incompatible ways.
