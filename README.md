@@ -39,18 +39,74 @@ done
 
 ## Exercise 2: Kafka Connect
 
-0. Enter the MySQL image's terminal with `docker-compose exec database bash`
-1. Run the MySQL command line client inside the image with `mysql -u user -ppassword`
-2. At the `mysql>` prompt, type `USE workshop;`. (The workshop database has already been created for you.)
-3. Load the schema and data by typing `\. /data/schema.sql` at the `mysql>` prompt.
-4. Exit the container. From the root project dir: `curl -i -X POST -H 'Content-Type: application/json' -d @connect/mysql-source.json http://localhost:8083/connectors`
+The Docker Compose environment includes a Postgres database called `workshop`, pre-populated with a `movies` table. Using Kafka Connect and the JDBC connector you can stream the contents of a database table, along with any future changes, into a Kafka topic. 
+
+First, let's check that Kafka Connect has started up. Run the following:
+
+```bash
+docker-compose logs -f connect|grep "Kafka Connect started"
+```
+
+Wait until you see the output `INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect)`. Press Ctrl-C twice to cancel and return to the command prompt. 
+
+Now create the JDBC connector, by sending the configuration to the Connnect REST API. *Before running this, make sure that you are in the `kafka-workshop` folder*. 
+
+```bash
+curl -i -X POST -H "Accept:application/json" \
+        -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
+        -d @connect/postgres-source.json
+```
+
+If you have [`jq`](https://stedolan.github.io/jq/) on your local machine, you can use the following bash snippet to use the REST API to easily see the status of the connector that you've created. 
+
+```
+curl -s "http://localhost:8083/connectors"| jq '.[]'| xargs -I{connector_name} curl -s "http://localhost:8083/connectors/"{connector_name}"/status"| jq -c -M '[.name,.connector.state,.tasks[].state]|join(":|:")'| column -s : -t| sed 's/\"//g'| sort
+```
+
+You should get output that looks like this: 
+
+```
+jdbc_source_postgres_movies  |  RUNNING  |  RUNNING
+```
+
+The JDBC connector will have pulled across all existing rows from the database into a Kafka topic. Run the following, to list the current Kafka topics: 
+
+```bash
+docker-compose exec kafka1 bash -c 'kafka-topics --zookeeper zookeeper:2181 --list'
+```
+
+You should see, amongst other topics, one called `postgres-movies`. Now let's inspect the data on the topic. Because Kafka Connect is configured to use Avro serialisation we'll use the `kafka-avro-console-consumer` to view it: 
+
+```bash
+docker-compose exec connect \
+                    kafka-avro-console-consumer \
+                    --bootstrap-server kafka1:9092 \
+                    --property schema.registry.url=http://schemaregistry:8081 \
+                    --topic postgres-movies --from-beginning
+```
+
+You should see the contents of the movies table spooled to your terminal. 
+
+**Leave the above command running**, and then in a new window launch a postgres shell: 
+
+```bash
+docker-compose exec database bash -c 'psql --username postgres --d WORKSHOP'
+```
+
+Arrange your terminal windows so that you can see both the `psql` prompt, and also the `kafka-avro-console-consumer` from the previous step (this should still be running; re-run it if not). 
+
+Now insert a row in the Postgres `movies` table—you should see almost instantly the same data appear in the Kafka topic. 
+
+```sql
+INSERT INTO movies(id,title,release_year) VALUES (937,'Top Gun',1986);
+```
 
 ## Exercise 2: Schemas, Schema Registry and Schema Compatibility
 In this exercise we'll design an Avro schema, register it in the Confluent Schema Registry, produce and consume events using this schema, and then modify the schema in compatible and incompatible ways.
 
 We assume you already have the environment up and running from the first exercise.
 
-0. Clean up the topic you created in the previous exercise as follows:
+1. Clean up the topic you created in the previous exercise as follows:
 ```
 $ docker-compose exec kafka1 bash
 root@kafka1:/# kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-raw
