@@ -36,7 +36,7 @@ services:
        
        
   zookeeper:
-    image: confluentinc/cp-zookeeper:4.1.1
+    image: confluentinc/cp-zookeeper:4.1.0
     restart: always
     environment:
       ZOOKEEPER_SERVER_ID: 1
@@ -47,7 +47,7 @@ services:
       - "2181:2181"
             
   connect:
-    image: confluentinc/cp-kafka-connect:4.1.1
+    image: confluentinc/cp-kafka-connect:4.1.0
     depends_on:
       - zookeeper
       - kafka1
@@ -77,7 +77,7 @@ services:
       
       
   kafka1:
-    image: confluentinc/cp-enterprise-kafka:4.1.1
+    image: confluentinc/cp-enterprise-kafka:4.1.0
     depends_on:
       - zookeeper
     ports:
@@ -99,7 +99,7 @@ services:
       
       
   schemaregistry:
-    image: confluentinc/cp-schema-registry:4.1.1
+    image: confluentinc/cp-schema-registry:4.1.0
     restart: always
     depends_on:
       - zookeeper
@@ -112,7 +112,7 @@ services:
       
       
   restproxy:
-    image: confluentinc/cp-kafka-rest:4.1.1
+    image: confluentinc/cp-kafka-rest:4.1.0
     restart: always
     depends_on:
       - kafka1
