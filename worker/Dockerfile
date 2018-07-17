@@ -8,7 +8,15 @@ RUN \
   apt-get -y upgrade && \
   apt-get install -y build-essential && \
   apt-get install -y software-properties-common && \
-  apt-get install -y byobu curl git htop man unzip vim wget && \
+  apt-get install -y byobu && \
+  apt-get install -y jq && \
+  apt-get install -y curl && \
+  apt-get install -y git && \
+  apt-get install -y htop && \
+  apt-get install -y man && \
+  apt-get install -y unzip && \
+  apt-get install -y vim && \
+  apt-get install -y wget && \
   rm -rf /var/lib/apt/lists/*
 
 RUN \

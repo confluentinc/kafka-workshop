@@ -1,0 +1,12 @@
+{
+  "name": "mysql_source_connector",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "connection.url": "jdbc:mysql://database:3306/demo?user=user&password=password",
+    "table.whitelist": "movies",
+    "mode": "incrementing",
+    "incrementing.column.name": "id",
+    "validate.non.null": "false",
+    "topic.prefix": "connect-"
+  }
+}
