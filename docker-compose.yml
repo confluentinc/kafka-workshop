@@ -17,7 +17,7 @@ services:
       - schemaregistry
       - zookeeper
     volumes:
-      - $PWD/ksqlproperties:/ksqlserver.properties
+      - ./ksqlproperties:/ksqlserver.properties
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
                        cub kafka-ready -b kafka1:9092 1 20 && \
                        echo Waiting for Confluent Schema Registry to be ready... && \
