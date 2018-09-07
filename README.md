@@ -6,7 +6,7 @@ Exercises for the Kafka Workshop
 
 If you're reading this, you probably know where to find the repo with the instructions, since this is it! Now that you're here, follow these instructions to get ready for the workshop:
 
-1 Install Docker ([Mac](https://docs.docker.com/docker-for-mac/install/), [Windows](https://docs.docker.com/docker-for-windows/install/)) on your system.
+1. Install Docker ([Mac](https://docs.docker.com/docker-for-mac/install/), [Windows](https://docs.docker.com/docker-for-windows/install/)) on your system.
 
 2. Install [Docker Compose](https://docs.docker.com/compose/install/). There are Mac, Windows, and Linux options available at the link.
 
