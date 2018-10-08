@@ -6,7 +6,7 @@ Exercises for the Kafka Workshop
 
 If you're reading this, you probably know where to find the repo with the instructions, since this is it! Now that you're here, follow these instructions to get ready for the workshop:
 
-1. Install [Docker Compose](https://docs.docker.com/compose/install/) on your system. There are Mac, Windows, and Linux options available at the link.
+1. Install Docker ([Mac](https://docs.docker.com/docker-for-mac/install/), [Windows](https://docs.docker.com/docker-for-windows/install/)) on your system.
 
     * Mac/Windows only: in Docker’s advanced settings, increase the memory dedicated to Docker to at least 8GB.
 
@@ -34,9 +34,9 @@ If you're reading this, you probably know where to find the repo with the instru
           [...]
 
 
-2. Clone this repo by typing `git clone https://github.com/confluentinc/kafka-workshop` from a terminal.
+3. Clone this repo by typing `git clone https://github.com/confluentinc/kafka-workshop` from a terminal.
 
-3. From the `kafka-workshop` directory (which you just cloned), run `docker-compose pull`. This will kick off no small amount of downloading. Get this primed before Exercise 1 begins later on!
+4. From the `kafka-workshop` directory (which you just cloned), run `docker-compose pull`. This will kick off no small amount of downloading. Get this primed before Exercise 1 begins later on!
 
 ## Exercise 1: Producing and Consuming to Kafka topics
 
@@ -117,7 +117,7 @@ The Docker Compose environment includes a Postgres database called `workshop`, p
 First, let's check that Kafka Connect has started up. Run the following:
 
 ```bash
-docker-compose logs -f connect|grep "Kafka Connect started"
+$ docker-compose logs -f connect|grep "Kafka Connect started"
 ```
 
 Wait until you see the output `INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect)`. Press Ctrl-C twice to cancel and return to the command prompt. 
@@ -367,3 +367,7 @@ _Bonus credit: The connector only captures `INSERT`s currently. Can you update t
             GROUP BY m.title;
 
 12. Select from that table and inspect the average ratings. Do you agree with them? Discuss. (If you want the table to stop updating, kill the Gradle task that is streaming the ratings—it's been going this whole time.)
+
+### Extra Credit
+
+Rewrite the KSQL queries to use the Avro topic you created in the Connect exercise.

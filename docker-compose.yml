@@ -31,6 +31,7 @@ services:
       - 8088:8088
     depends_on:
       - kafka1
+      - schemaregistry
       - zookeeper
       - schemaregistry
     environment:
