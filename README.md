@@ -14,27 +14,66 @@ If you're reading this, you probably know where to find the repo with the instru
 
 ## Exercise 1: Producing and Consuming to Kafka topics
 
-1. Run the workshop application by typing `docker-compose up -d` from the project root. This will start up a Kafka broker, a Zookeeper node, and a KSQL container, and a worker container. The "worker" is a helper container with some data and tools in it.
+1. Run the workshop application by typing 
 
-2. Get into the worker container by typing `docker-compose run worker bash`. This will get you a terminal inside the container.
+        docker-compose up -d
+    
+    from the project root. This will start up a Kafka broker, a Zookeeper node, and a KSQL server.
 
-3. Verify that you have connectivity to your Kafka cluster by typing `kafkacat -b kafka1:9092 -L`. This will list all cluster metadata, which at this point isn't much.
+    We're using the `kafkacat` tool to interact with the Kafka cluster, invoked here through Docker Compose. `kafkacat` is a similar command-line tool to others that you may have seen including `kafka-console-consumer` and `kafka-console-producer` etc. 
 
-4. Produce a single record into the `movies-raw` topic from the `streams-demo/data/movies-json.js` file. Hint: use `tail -n 1` to pipe a single record to `kafkacat`, and check out the `-P` and `-t` command line switches at `kafkacat --help`.
+3. Verify that you have connectivity to your Kafka cluster by typing 
+
+        docker-compose exec worker \
+        kafkacat -b kafka1:9092 \
+                 -L
+
+    This will list all cluster metadata, which at this point isn't much.
+
+4. Produce a single record into the `movies-raw` topic from the `movies-json.js` file which you can view your local `worker/data` folder, and is mounted to the container. 
+
+        docker-compose exec worker \
+        kafkacat -b kafka1:9092 \
+                 -P -c 1 \
+                 -t movies-raw \
+                 -l /data/movies-json.js
+
+
+    Hint: you can see the flags available to you with kafkacat by running: `docker-compose exec kafkacat kafkacat -h`.
 
 5. Once you've produced a record to the topic, open up a new terminal tab or window and consume it using `kafkacat` and the `-C` switch.
 
+        docker-compose exec worker \
+        kafkacat -b kafka1:9092 \
+                 -C \
+                 -t movies-raw \
+
 6. Go back to the producer terminal tab and send two records to the topic using `tail -n 2`. (It's okay that one of these is a duplicate.)
+
+        docker-compose exec worker \
+        kafkacat -b kafka1:9092 \
+                 -P -c 2 \
+                 -t movies-raw \
+                 -l /data/movies-json.js
 
 7. For fun, keep the consumer tab visible and run this shell script in the producer tab:
 
-		cat streams-demo/data/movies-json.js | while read in;
-		do
-		echo $in | kafkacat -b kafka1:9092 -P -t movies-raw
-		sleep 1
-		done
+        docker-compose exec worker bash -c '
+        cat /data/movies-json.js | while read in;
+        do
+        echo $in | kafkacat -b kafka1:9092 -P -t movies-raw
+        sleep 1
+        done'
 
-8. Be sure to finish up by dumping all movie data into the `movies-raw` topic with `cat movies-json.js | kafkacat -b kafka1:9092 -P -t movies-raw`.
+    Press Ctrl-C to cancel this script after you've observed the messages arriving in the consumer.
+
+8. Be sure to finish up by dumping all movie data into the `movies-raw` topic with 
+
+        docker-compose exec worker \
+        kafkacat -b kafka1:9092 \
+                 -P \
+                 -t movies-raw \
+                 -l /data/movies-json.js
 
 
 ## Exercise 2: Kafka Connect
@@ -108,8 +147,7 @@ We assume you already have the environment up and running from the first exercis
 
 1. Clean up the topic you created in the previous exercise as follows:
 
-        $ docker-compose exec kafka1 bash
-        root@kafka1:/# kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-raw
+        docker-compose exec kafka1 bash -c 'kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-raw'
 
 1. Think of a stream processing use-case that interests you.
 

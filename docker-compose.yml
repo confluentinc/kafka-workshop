@@ -3,13 +3,13 @@ version: "3.0"
 services:
 
 
-  kafkacat:
-    image: confluentinc/cp-kafkacat
-    depends_on:
-      - kafka1
-    command: "bash -c 'sleep infinity'"
-    volumes: 
-      - $PWD/worker/data:/data
+  # kafkacat:
+  #   image: confluentinc/cp-kafkacat
+  #   depends_on:
+  #     - kafka1
+  #   command: "bash -c 'sleep infinity'"
+  #   volumes: 
+  #     - $PWD/worker/data:/data
       
   worker:
     image: tlberglund/kafka-workshop-worker
@@ -17,6 +17,9 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
     depends_on:
       - kafka1
+    command: "bash -c 'sleep infinity'"
+    volumes: 
+      - $PWD/worker/data:/data
 
   ksql:
     image: confluentinc/ksql-cli:4.1.0
