@@ -46,7 +46,7 @@ If you're reading this, you probably know where to find the repo with the instru
         docker-compose exec worker \
         kafkacat -b kafka1:9092 \
                  -C \
-                 -t movies-raw \
+                 -t movies-raw
 
 6. Go back to the producer terminal tab and send two records to the topic using `tail -n 2`. (It's okay that one of these is a duplicate.)
 
