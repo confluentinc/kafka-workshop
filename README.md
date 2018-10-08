@@ -62,13 +62,13 @@ curl -i -X POST -H "Accept:application/json" \
 If you have [`jq`](https://stedolan.github.io/jq/) on your local machine, you can use the following bash snippet to use the REST API to easily see the status of the connector that you've created. 
 
 ```bash
-curl -s "http://localhost:8083/connectors" \
-    | jq '.[]' \
-    | xargs -I{connector_name} curl -s "http://localhost:8083/connectors/"{connector_name}"/status" \
-    | jq -c -M '[.name,.connector.state,.tasks[].state]|join(":|:")' \
-    | column -s : -t \
-    | sed 's/\"//g' \
-    | sort
+curl -s "http://localhost:8083/connectors" |\
+    jq '.[]' |\
+    xargs -I{connector_name} curl -s "http://localhost:8083/connectors/"{connector_name}"/status" |\
+    jq -c -M '[.name,.connector.state,.tasks[].state]|join(":|:")' |\
+    column -s : -t |\
+    sed 's/\"//g' |\
+    sort
 ```
 
 You should get output that looks like this: 
