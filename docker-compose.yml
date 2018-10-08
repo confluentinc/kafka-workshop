@@ -2,13 +2,21 @@ version: "3.0"
 
 services:
 
+
+  kafkacat:
+    image: confluentinc/cp-kafkacat
+    depends_on:
+      - kafka1
+    command: "bash -c 'sleep infinity'"
+    volumes: 
+      - $PWD/worker/data:/data
+      
   worker:
     image: tlberglund/kafka-workshop-worker
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
     depends_on:
       - kafka1
-      - ksql
 
   ksql:
     image: confluentinc/ksql-cli:4.1.0
@@ -81,7 +89,6 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"
       - "29092:29092"
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"

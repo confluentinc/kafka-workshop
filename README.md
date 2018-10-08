@@ -27,13 +27,13 @@ If you're reading this, you probably know where to find the repo with the instru
 6. Go back to the producer terminal tab and send two records to the topic using `tail -n 2`. (It's okay that one of these is a duplicate.)
 
 7. For fun, keep the consumer tab visible and run this shell script in the producer tab:
-```bash
-cat streams-demo/data/movies-json.js | while read in;
-do
-echo $in | kafkacat -b kafka1:9092 -P -t movies-raw
-sleep 1
-done
-```
+
+		cat streams-demo/data/movies-json.js | while read in;
+		do
+		echo $in | kafkacat -b kafka1:9092 -P -t movies-raw
+		sleep 1
+		done
+
 8. Be sure to finish up by dumping all movie data into the `movies-raw` topic with `cat movies-json.js | kafkacat -b kafka1:9092 -P -t movies-raw`.
 
 
@@ -188,10 +188,8 @@ We assume you already have the environment up and running from the first exercis
 ## Exercise 4: Enriching Data with KSQL
 
 0. Clean up the topic you created in exercise 2 as follows:
-```
-$ docker-compose exec kafka1 bash
-root@kafka1:/# kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-raw
-```
+
+       docker-compose exec kafka1 bash -c 'kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-raw'
 
 1. In separate terminal tabs, keep the worker container from exercise #1 running, and run a second container with the following steps:
 ```
