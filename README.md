@@ -88,25 +88,52 @@ docker-compose logs -f connect|grep "Kafka Connect started"
 
 Wait until you see the output `INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect)`. Press Ctrl-C twice to cancel and return to the command prompt. 
 
-Now create the JDBC connector, by sending the configuration to the Connnect REST API. *Before running this, make sure that you are in the `kafka-workshop` folder*. 
+Now create the JDBC connector, by sending the configuration to the Connect REST API. We'll do this from within the Kafka Connect container, by first running: 
+
+```
+docker-compose exec connect bash
+```
+
+and then run the configuration: 
 
 ```bash
 curl -i -X POST -H "Accept:application/json" \
         -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
-        -d @connect/postgres-source.json
+        -d @/connect/postgres-source.json
 ```
 
-If you have [`jq`](https://stedolan.github.io/jq/) on your local machine, you can use the following bash snippet to use the REST API to easily see the status of the connector that you've created. 
+Now check that the connector's been created: 
 
 ```
-curl -s "http://localhost:8083/connectors"| jq '.[]'| xargs -I{connector_name} curl -s "http://localhost:8083/connectors/"{connector_name}"/status"| jq -c -M '[.name,.connector.state,.tasks[].state]|join(":|:")'| column -s : -t| sed 's/\"//g'| sort
+root@b29a6bfdd1a4:/# curl -s "http://localhost:8083/connectors"
+["jdbc_source_postgres_movies"]
 ```
 
-You should get output that looks like this: 
+and that it is running successfully: 
 
 ```
-jdbc_source_postgres_movies  |  RUNNING  |  RUNNING
+root@b29a6bfdd1a4:/# curl -s "http://localhost:8083/connectors/jdbc_source_postgres_movies/status"
+{"name":"jdbc_source_postgres_movies","connector":{"state":"RUNNING","worker_id":"kafka-connect:8083"},"tasks":[{"state":"RUNNING","id":0,"worker_id":"kafka-connect:8083"}],"type":"source"}root@b29a6bfdd1a4:/#
 ```
+
+Press Ctrl-D to exit from the Kafka Connect container and back to your host machine. 
+
+
+---
+
+* _NOTE: if you have [`jq`](https://stedolan.github.io/jq/) on your *host* machine, you can use the following bash snippet to use the REST API to easily see the status of the connector that you've created._
+
+  ```
+  | jq '.[]'| xargs -I{connector_name} curl -s "http://localhost:8083/connectors/"{connector_name}"/status"| jq -c -M '[.name,.connector.state,.tasks[].state]|join(":|:")'| column -s : -t| sed 's/\"//g'| sort
+  ```
+
+  You should get output that looks like this: 
+
+  ```
+  jdbc_source_postgres_movies  |  RUNNING  |  RUNNING
+  ```
+
+--- 
 
 The JDBC connector will have pulled across all existing rows from the database into a Kafka topic. Run the following, to list the current Kafka topics: 
 

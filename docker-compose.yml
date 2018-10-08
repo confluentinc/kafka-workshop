@@ -2,7 +2,6 @@ version: "3.0"
 
 services:
 
-
   # kafkacat:
   #   image: confluentinc/cp-kafkacat
   #   depends_on:
@@ -22,18 +21,22 @@ services:
       - $PWD/worker/data:/data
 
   ksql:
-    image: confluentinc/ksql-cli:4.1.0
+    image: confluentinc/cp-ksql-server:5.0.0
+    ports:
+      - 8088:8088
     depends_on:
       - kafka1
       - zookeeper
-    volumes:
-      - $PWD/ksqlproperties:/ksqlserver.properties
-    # environment:
-    #   KSQL_CONFIG_DIR: "/etc/ksql"
-    #   KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
-    #   STREAMS_BOOTSTRAP_SERVERS: kafka1:9092
-    #   STREAMS_SCHEMA_REGISTRY_HOST: schemaregistry
-    #   STREAMS_SCHEMA_REGISTRY_PORT: 8081
+      - schemaregistry
+    environment:
+      KSQL_BOOTSTRAP_SERVERS: kafka1:9092
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_KSQL_SERVICE_ID: kafka_workshop
+      KSQL_CUB_KAFKA_TIMEOUT: 300
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schemaregistry:8081
+      KSQL_KSQL_COMMIT_INTERVAL_MS: 2000
+      KSQL_KSQL_CACHE_MAX_BYTES_BUFFERING: 10000000
+      KSQL_KSQL_AUTO_OFFSET_RESET: earliest
 
   database:
     image: postgres
@@ -47,7 +50,7 @@ services:
        
        
   zookeeper:
-    image: confluentinc/cp-zookeeper:4.1.0
+    image: confluentinc/cp-zookeeper:5.0.0
     restart: always
     environment:
       ZOOKEEPER_SERVER_ID: 1
@@ -58,7 +61,7 @@ services:
       - "2181:2181"
             
   connect:
-    image: confluentinc/cp-kafka-connect:4.1.0
+    image: confluentinc/cp-kafka-connect:5.0.0
     depends_on:
       - zookeeper
       - kafka1
@@ -85,13 +88,17 @@ services:
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_PLUGIN_PATH: '/usr/share/java'
-      
+    volumes: 
+      - ./connect/postgres-source.json:/connect/postgres-source.json      
       
   kafka1:
-    image: confluentinc/cp-enterprise-kafka:4.1.0
+    image: confluentinc/cp-enterprise-kafka:5.0.0
     depends_on:
       - zookeeper
     ports:
+    # Exposes 29092 for external connections to the broker
+    # Use kafka1:9092 for connections internal on the docker network
+    # See https://rmoff.net/2018/08/02/kafka-listeners-explained/ for details
       - "29092:29092"
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
@@ -109,7 +116,7 @@ services:
       
       
   schemaregistry:
-    image: confluentinc/cp-schema-registry:4.1.0
+    image: confluentinc/cp-schema-registry:5.0.0
     restart: always
     depends_on:
       - zookeeper
@@ -122,7 +129,7 @@ services:
       
       
   restproxy:
-    image: confluentinc/cp-kafka-rest:4.1.0
+    image: confluentinc/cp-kafka-rest:5.0.0
     restart: always
     depends_on:
       - kafka1
