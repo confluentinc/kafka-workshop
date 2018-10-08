@@ -20,7 +20,12 @@ services:
     volumes: 
       - $PWD/worker/data:/data
 
-  ksql:
+  ksql-cli:
+    image: confluentinc/cp-ksql-cli:5.0.0
+    depends_on:
+      - ksql-server
+
+  ksql-server:
     image: confluentinc/cp-ksql-server:5.0.0
     ports:
       - 8088:8088
@@ -36,7 +41,7 @@ services:
       KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schemaregistry:8081
       KSQL_KSQL_COMMIT_INTERVAL_MS: 2000
       KSQL_KSQL_CACHE_MAX_BYTES_BUFFERING: 10000000
-      KSQL_KSQL_AUTO_OFFSET_RESET: earliest
+      KSQL_KSQL_STREAMS_AUTO_OFFSET_RESET: earliest
 
   database:
     image: postgres

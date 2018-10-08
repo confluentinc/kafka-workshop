@@ -104,6 +104,14 @@ If you're reading this, you probably know where to find the repo with the instru
 
 ## Exercise 2: Kafka Connect
 
+You need to confirm that Docker has at least 8GB of memory available to it: 
+
+    docker system info | grep Memory 
+
+Should return a value greater than 8GB - if not, the Kafka stack will probably not work.
+
+----
+
 The Docker Compose environment includes a Postgres database called `workshop`, pre-populated with a `movies` table. Using Kafka Connect and the JDBC connector you can stream the contents of a database table, along with any future changes, into a Kafka topic. 
 
 First, let's check that Kafka Connect has started up. Run the following:
@@ -114,36 +122,29 @@ docker-compose logs -f connect|grep "Kafka Connect started"
 
 Wait until you see the output `INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect)`. Press Ctrl-C twice to cancel and return to the command prompt. 
 
-Now create the JDBC connector, by sending the configuration to the Connect REST API. We'll do this from within the Kafka Connect container, by first running: 
+Now create the JDBC connector, by sending the configuration to the Connect REST API. We'll do this from within the Kafka Connect container: 
 
 ```
-docker-compose exec connect bash
-```
-
-and then run the configuration: 
-
-```bash
-curl -i -X POST -H "Accept:application/json" \
+docker-compose exec connect bash -c 'curl -i -X POST -H "Accept:application/json" \
         -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
-        -d @/connect/postgres-source.json
+        -d @/connect/postgres-source.json'
 ```
 
 Now check that the connector's been created: 
 
 ```
-root@b29a6bfdd1a4:/# curl -s "http://localhost:8083/connectors"
+docker-compose exec connect bash -c 'curl -s "http://localhost:8083/connectors"'
+
 ["jdbc_source_postgres_movies"]
 ```
 
 and that it is running successfully: 
 
 ```
-root@b29a6bfdd1a4:/# curl -s "http://localhost:8083/connectors/jdbc_source_postgres_movies/status"
-{"name":"jdbc_source_postgres_movies","connector":{"state":"RUNNING","worker_id":"kafka-connect:8083"},"tasks":[{"state":"RUNNING","id":0,"worker_id":"kafka-connect:8083"}],"type":"source"}root@b29a6bfdd1a4:/#
+docker-compose exec connect bash -c 'curl -s "http://localhost:8083/connectors/jdbc_source_postgres_movies/status"'
+
+{"name":"jdbc_source_postgres_movies","connector":{"state":"RUNNING","worker_id":"kafka-connect:8083"},"tasks":[{"state":"RUNNING","id":0,"worker_id":"kafka-connect:8083"}],"type":"source"}
 ```
-
-Press Ctrl-D to exit from the Kafka Connect container and back to your host machine. 
-
 
 ---
 
@@ -193,73 +194,7 @@ Now insert a row in the Postgres `movies` table—you should see almost instantl
 INSERT INTO movies(id,title,release_year) VALUES (937,'Top Gun',1986);
 ```
 
-## Exercise 2: Schemas, Schema Registry and Schema Compatibility
-In this exercise we'll design an Avro schema, register it in the Confluent Schema Registry, produce and consume events using this schema, and then modify the schema in compatible and incompatible ways.
-
-We assume you already have the environment up and running from the first exercise.
-
-1. Clean up the topic you created in the previous exercise as follows:
-
-        docker-compose exec kafka1 bash -c 'kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-raw'
-
-1. Think of a stream processing use-case that interests you.
-
-   What kind of data do you have? Which topics will you need? select one of the topics and decide on key and value schema for records in the topic. How did the choice of topics influence the event schema? What trade-offs did you make in designing the data model?
-
-2. Write down the schema definition in JSON format.
-
-   You can see the schema definition rules for Avro [here](https://avro.apache.org/docs/1.8.1/spec.html#schemas). If you are stuck coming up with your own schema, you can find a schema that we created for our movies topic in `movies-raw.avsc`.
-
-3. Now, let's register the schema in the Confluent Schema Registry.
-
-   Instructions can be found in [Schema Registry documentation](https://docs.confluent.io/current/schema-registry/docs/intro.html#quickstart).
-   We are registering a schema for values, not keys. And in my case, the records will belong to topic `movies-raw`, so I'll register the schema under the subject `movies-raw-value`.
-   It is important to note the details of the Schema Registry API for [registering a schema](https://docs.confluent.io/current/schema-registry/docs/api.html#post--subjects-(string-%20subject)-versions). It says:
-   
-   > Request JSON Object:  
-   >     
-   > schema – The Avro schema string
-
-   Which means that we need to pass to the API a JSON record, with one key "schema" and the value is a string containing our schema. We can't pass the schema itself when registering it.
-
-   I used `jq` to wrap our Avro Schema appropriately: 
-   
-       jq -n --slurpfile schema movies-raw.avsc  '$schema | {schema: tostring}'
-   
-   And then passed the output of `jq` to `curl` with a pipe:    
-   ```  
-   jq -n --slurpfile schema movies-raw.avsc  '$schema | {schema: tostring}' | curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data @- http://localhost:8081/subjects/movies-raw-value/versions  
-   ```  
-   The output should be an ID. **Remember the ID you got, so you can use it when producing and consuming events**.  
-
-4. Now it is time to produce an event with our schema. We'll use the REST Proxy for that.
-
-   You can see [few examples for using Rest Proxy](https://docs.confluent.io/current/kafka-rest/docs/intro.html#produce-and-consume-avro-messages). Note that you don't have to include the entire schema in every single message, since the schema is registered, [you can just include the ID](https://docs.confluent.io/current/kafka-rest/docs/api.html#post--topics-(string-topic_name)). 
-  
-   For example, to produce to the movies topic, we can run:  
-   ```
-   curl -X POST -H "Content-Type: application/vnd.kafka.avro.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"value_schema_id": 1, "records": [{"value": {"movie":{"movie_id": 1, "title": "Ready Player One", "release_year":2018}}}]}'  http://localhost:8082/topics/movies-raw
-   ```
-
-   Note that the `"value_schema_id"` value must be the ID of the schema that you have registered for this data (in the previous step)
-  
-5. Let's try to consume some messages.
-
-   I'll use the simple consumer (i.e. read a specific set of messages from a specific partition, rather than subscribe to all new messages in a topic) because it is simple. You can see examples for using the new consumer API in the documentation linked above.
-   ```
-   curl -H "Accept: application/vnd.kafka.avro.v1+json" "http://localhost:8082/topics/postgres-movies/partitions/0/messages?offset=0&count=10"
-   ```
-
-   Note that you need to specify the serialisation format of the messages on the topic from which you are reading. In the code sample shown here it's reading Avro messages; if the data isn't in Avro, it you'll get an error. [Read more about this here](https://docs.confluent.io/current/kafka-rest/docs/api.html#content-types).
-
-6. Now is the fun part. 
-
-   Make some changes to the schema - add fields, remove fields or modify types. Is the result compatible? Let's check with schema registry:
-   ```
-   jq -n --slurpfile schema movies-raw-new.avsc  '$schema | {schema: tostring}' |curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data @- http://localhost:8081/compatibility/subjects/movies-raw-value/versions/latest
-   ```
-
-7. Use the REST Proxy to produce and consume messages with modified schemas, both compatible and in-compatible. What happens?
+_Bonus credit: The connector only captures `INSERT`s currently. Can you update the connector configuration to also capture `UPDATE`s? Can you suggest why the JDBC connector cannot capture `DELETE`s?_
 
 
 ## Exercise 3: Your Own Schema Design
@@ -278,39 +213,157 @@ We assume you already have the environment up and running from the first exercis
 
 ## Exercise 4: Enriching Data with KSQL
 
-0. Clean up the topic you created in exercise 2 as follows:
+1. Clean up the topic you created in the previous exercise as follows:
 
-       docker-compose exec kafka1 bash -c 'kafka-topics --zookeeper zookeeper:2181 --delete --topic movies-raw'
+    ```
+    docker-compose exec kafka1 \
+    kafka-topics --zookeeper zookeeper:2181 \
+                 --delete \
+                 --topic movies-raw
+    ```
 
-1. In separate terminal tabs, keep the worker container from exercise #1 running, and run a second container with the following steps:
-```
-$ docker-compose run ksql bash
-root@929aa798b628:/# ksql --properties-file=ksqlserver.properties
-```
+2. In the worker container, send a single event of the movie data file to the topic: 
 
-2. In the worker container, see the movies data with `head -n 1 streams-demo/data/movies-json.js  | kafkacat -b kafka1:9092 -t movies-raw -P`
+        docker-compose exec worker \
+        kafkacat -b kafka1:9092 \
+                 -P -c 1 \
+                 -t movies-raw \
+                 -l /data/movies-json.js
+
+3. Launch the KSQL CLI: 
 
 
-3. In the KSQL container, create a stream around the raw movie data: `CREATE STREAM movies_src (movie_id LONG, title VARCHAR, release_year INT) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='movies-raw');`
+        docker-compose exec ksql-cli ksql http://ksql-server:8088
 
-4. As you can see by selecting the records from that stream, the key is null. Re-key it with `CREATE STREAM movies_rekeyed AS SELECT * FROM movies_src PARTITION BY movie_id;`
+    You should see the startup screen: 
 
-5. Run a non-persistent select on `movies_rekeyed` in the KSQL window, then stream ten more movie records into the `movies-raw` topic. Watch them appear in the rekeyed stream. 
+                        ===========================================
+                        =        _  __ _____  ____  _             =
+                        =       | |/ // ____|/ __ \| |            =
+                        =       | ' /| (___ | |  | | |            =
+                        =       |  <  \___ \| |  | | |            =
+                        =       | . \ ____) | |__| | |____        =
+                        =       |_|\_\_____/ \___\_\______|       =
+                        =                                         =
+                        =  Streaming SQL Engine for Apache Kafka® =
+                        ===========================================
 
-6. Turn the movies into a table of reference data with `CREATE TABLE movies_ref (movie_id LONG, title VARCHAR, release_year INT) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='MOVIES_REKEYED', KEY='movie_id');`
+        Copyright 2017-2018 Confluent Inc.
 
-7. In a new worker container (another terminal tab with `docker-compose run worker bash`), do the following:
-```
-cd streams-demo
-./gradlew streamJsonRatings
-```
+        CLI v5.0.0, Server v5.0.0 located at http://ksql-server:8088
 
-8. Create a stream to represent the ratings: `CREATE STREAM ratings (movie_id LONG, rating DOUBLE) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='ratings');`
+        Having trouble? Type 'help' (case-insensitive) for a rundown of how things work!
 
-9. Attempt to join ratings to the movie data with `SELECT m.title, m.release_year, r.rating FROM ratings r LEFT OUTER JOIN movies_ref m on r.movie_id = m.movie_id;`. Note the nulls! We need more movies in the reference stream.
+        ksql>
 
-10. `cat` the rest of the `movies-json.js` file into the stream. Notice that the join starts working!
+3. In the KSQL container, create a stream around the raw movie data: 
 
-11. Create a table containing average ratings as follows: `CREATE TABLE movie_ratings AS SELECT m.title, SUM(r.rating)/COUNT(r.rating) AS avg_rating, COUNT(r.rating) AS num_ratings FROM ratings r LEFT OUTER JOIN movies_ref m ON m.movie_id = r.movie_id GROUP BY m.title;`
+        CREATE STREAM movies_src (movie_id BIGINT, title VARCHAR, release_year INT) \
+        WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='movies-raw');
+
+    _The `\` is a line continuation character; you must include it if splitting the command over more than one line_
+
+4. As you can see by selecting the records from that stream, the key (`ROWKEY`) is null:
+
+        SELECT ROWKEY, movie_id, title, release_year FROM movies_src LIMIT 1;
+
+    Re-key it: 
+    
+        CREATE STREAM movies_rekeyed WITH (PARTITIONS=1) AS \
+        SELECT * FROM movies_src PARTITION BY movie_id;
+        
+    and verify that the messages are now correctly keyed: 
+
+        SELECT ROWKEY, movie_id, title, release_year FROM movies_rekeyed;
+
+    Leave the `SELECT` query running. 
+
+5. With the `SELECT` from the previous step still running, stream ten more movie records into the `movies-raw` topic. 
+
+        docker-compose exec worker \
+        kafkacat -b kafka1:9092 \
+                 -P -c 10 \
+                 -t movies-raw \
+                 -l /data/movies-json.js
+
+    Watch them appear in the rekeyed stream. Cancel the continuous `SELECT` query by pressing Ctrl-C. 
+
+6. Turn the movies into a table of reference data using the rekeyed stream:
+
+        CREATE TABLE movies_ref (movie_id BIGINT, title VARCHAR, release_year INT) \
+        WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='MOVIES_REKEYED', KEY='movie_id');
+
+7. Launch the demo application to generate a stream of ratings events
+
+        docker-compose exec worker bash -c 'cd streams-demo;./gradlew streamJsonRatings'
+
+    After a minute or two you should see output similar to this:  
+
+        Starting a Gradle Daemon, 1 incompatible and 1 stopped Daemons could not be reused, use --status for details
+        Download https://jcenter.bintray.com/org/glassfish/javax.json/1.1.2/javax.json-1.1.2.pom
+        Download https://jcenter.bintray.com/org/glassfish/javax.json/1.1.2/javax.json-1.1.2.jar
+
+        > Task :streamJsonRatings
+        Streaming ratings to kafka1:9092
+        log4j:WARN No appenders could be found for logger (org.apache.kafka.clients.producer.ProducerConfig)
+        log4j:WARN Please initialize the log4j system properly.
+        log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+        1539005442
+        RATINGS PRODUCED 0
+        RATINGS PRODUCED 1
+        RATINGS PRODUCED 105
+        RATINGS PRODUCED 520
+        [...]    
+
+8. In KSQL, create a KSQL stream to represent the ratings: 
+
+        CREATE STREAM ratings (movie_id BIGINT, rating DOUBLE) WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='ratings');
+
+    Query the stream to sample the first five records: 
+
+        ksql> SELECT movie_id, rating FROM ratings LIMIT 5;
+        658 | 5.892434316207264
+        592 | 0.9017764100506152
+        780 | 3.5642802867920924
+        25 | 5.742257919645975
+        802 | 5.683675232040815
+        Limit Reached
+        Query terminated
+        ksql>
+
+9. Join ratings to the movie data 
+
+        ksql> SELECT m.title, m.release_year, r.rating \
+              FROM ratings r \
+                   LEFT OUTER JOIN movies_ref m \
+                   ON r.movie_id = m.movie_id;
+
+        null | null | 5.892434316207264
+        null | null | 0.9017764100506152
+        null | null | 3.5642802867920924
+        [...]
+
+    Note the nulls! We need more movies in the reference stream.
+
+10. Leave the `SELECT` statement from the previous step running (and visible on your screen). In a new terminal window, stream the full contents of the `movies-json.js` file into the movies topic. 
+
+        docker-compose exec worker \
+        kafkacat -b kafka1:9092 \
+                 -P \
+                 -t movies-raw \
+                 -l /data/movies-json.js
+
+        Notice that the join starts working!
+
+    Once you're happy with the results of the join, press Ctrl-C to cancel the `SELECT` statement.
+
+11. Create a table containing average ratings as follows:
+
+        CREATE TABLE movie_ratings AS \
+            SELECT m.title, SUM(r.rating)/COUNT(r.rating) AS avg_rating, COUNT(r.rating) AS num_ratings \
+              FROM ratings r \
+                   LEFT OUTER JOIN movies_ref m \
+                   ON m.movie_id = r.movie_id \
+            GROUP BY m.title;
 
 12. Select from that table and inspect the average ratings. Do you agree with them? Discuss. (If you want the table to stop updating, kill the Gradle task that is streaming the ratings—it's been going this whole time.)
