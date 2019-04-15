@@ -301,7 +301,7 @@ _Bonus credit: The connector only captures `INSERT`s currently. Can you update t
 
 7. Launch the demo application to generate a stream of ratings events
 
-        docker-compose exec worker bash -c 'cd streams-demo;./gradlew streamJsonRatings'
+        docker-compose exec worker bash -c 'cd streams-demo;./gradlew :loader:streamWithJSONRatingStreamer'
 
     After a minute or two you should see output similar to this:  
 
