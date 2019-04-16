@@ -11,7 +11,7 @@ services:
   #     - $PWD/worker/data:/data
       
   worker:
-    image: tlberglund/kafka-workshop-worker
+    image: tlberglund/kafka-workshop-worker:latest
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
     depends_on:
@@ -21,12 +21,12 @@ services:
       - $PWD/worker/data:/data
 
   ksql-cli:
-    image: confluentinc/cp-ksql-cli:5.0.0
+    image: confluentinc/cp-ksql-cli:5.2.1
     depends_on:
       - ksql-server
 
   ksql-server:
-    image: confluentinc/cp-ksql-server:5.0.0
+    image: confluentinc/cp-ksql-server:5.2.1
     ports:
       - 8088:8088
     depends_on:
@@ -55,7 +55,7 @@ services:
        
        
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.0.0
+    image: confluentinc/cp-zookeeper:5.2.1
     restart: always
     environment:
       ZOOKEEPER_SERVER_ID: 1
@@ -66,7 +66,7 @@ services:
       - "2181:2181"
             
   connect:
-    image: confluentinc/cp-kafka-connect:5.0.0
+    image: confluentinc/cp-kafka-connect:5.2.1
     depends_on:
       - zookeeper
       - kafka1
@@ -97,7 +97,7 @@ services:
       - ./connect/postgres-source.json:/connect/postgres-source.json      
       
   kafka1:
-    image: confluentinc/cp-enterprise-kafka:5.0.0
+    image: confluentinc/cp-enterprise-kafka:5.2.1
     depends_on:
       - zookeeper
     ports:
@@ -121,7 +121,7 @@ services:
       
       
   schemaregistry:
-    image: confluentinc/cp-schema-registry:5.0.0
+    image: confluentinc/cp-schema-registry:5.2.1
     restart: always
     depends_on:
       - zookeeper
@@ -134,7 +134,7 @@ services:
       
       
   restproxy:
-    image: confluentinc/cp-kafka-rest:5.0.0
+    image: confluentinc/cp-kafka-rest:5.2.1
     restart: always
     depends_on:
       - kafka1

@@ -2,22 +2,23 @@ FROM ubuntu
 
 COPY data/ .
 
-RUN \
-  sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list && \
-  apt-get update && \
-  apt-get -y upgrade && \
-  apt-get install -y build-essential && \
-  apt-get install -y software-properties-common && \
-  apt-get install -y byobu && \
-  apt-get install -y jq && \
-  apt-get install -y curl && \
-  apt-get install -y git && \
-  apt-get install -y htop && \
-  apt-get install -y man && \
-  apt-get install -y unzip && \
-  apt-get install -y vim && \
-  apt-get install -y wget && \
-  rm -rf /var/lib/apt/lists/*
+RUN sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list
+RUN apt-get update
+RUN apt-get -y upgrade
+RUN apt-get -y autoremove
+RUN apt-get install -y apt-utils
+RUN apt-get install -y build-essential
+RUN apt-get install -y software-properties-common
+RUN apt-get install -y byobu
+RUN apt-get install -y jq
+RUN apt-get install -y curl
+RUN apt-get install -y git
+RUN apt-get install -y htop
+RUN apt-get install -y man
+RUN apt-get install -y unzip
+RUN apt-get install -y vim 
+RUN apt-get install -y wget 
+RUN rm -rf /var/lib/apt/lists/*
 
 RUN \
   echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
@@ -34,8 +35,8 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 CMD ["bash"]
 
 RUN apt-get install -y git
-RUN git clone https://github.com/tlberglund/streams-movie-demo streams-demo
-RUN cd streams-demo && ./gradlew build
+RUN git clone https://github.com/confluentinc/demo-scene demo-scene
+RUN cd demo-scene/streams-movie-demo && ./gradlew build
 
 ARG COMMIT_ID=unknown
 LABEL io.confluent.docker.git.id=$COMMIT_ID
