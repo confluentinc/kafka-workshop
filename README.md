@@ -65,7 +65,7 @@ If you're reading this, you probably know where to find the repo with the instru
                  -l /data/movies-json.js
 
 
-    Hint: you can see the flags available to you with kafkacat by running: `docker-compose exec kafkacat kafkacat -h`.
+    Hint: you can see the flags available to you with kafkacat by running: `docker-compose exec worker kafkacat -h`.
 
 5. Once you've produced a record to the topic, open up a new terminal tab or window and consume it using `kafkacat` and the `-C` switch.
 
@@ -301,7 +301,7 @@ _Bonus credit: The connector only captures `INSERT`s currently. Can you update t
 
 7. Launch the demo application to generate a stream of ratings events
 
-        docker-compose exec worker bash -c 'cd streams-demo;./gradlew streamJsonRatings'
+        docker-compose exec worker bash -c 'cd demo-scene/streams-movie-demo;./gradlew :loader:streamWithJSONRatingStreamer'
 
     After a minute or two you should see output similar to this:  
 
