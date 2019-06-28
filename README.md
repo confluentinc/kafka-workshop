@@ -239,7 +239,7 @@ _Bonus credit: The connector only captures `INSERT`s currently. Can you update t
 3. Launch the KSQL CLI: 
 
 
-        docker-compose exec ksql-cli ksql http://ksql-server:8088
+        docker-compose run ksql-cli http://ksql-server:8088
 
     You should see the startup screen: 
 
@@ -299,11 +299,26 @@ _Bonus credit: The connector only captures `INSERT`s currently. Can you update t
         CREATE TABLE movies_ref (movie_id BIGINT, title VARCHAR, release_year INT) \
         WITH (VALUE_FORMAT='JSON', KAFKA_TOPIC='MOVIES_REKEYED', KEY='movie_id');
 
-7. Launch the demo application to generate a stream of ratings events
+7. Launch the demo application to generate a stream of ratings events. To do this, first get to a bash prompt inside the worker container:
 
-        docker-compose exec worker bash -c 'cd demo-scene/streams-movie-demo;./gradlew :loader:streamWithJSONRatingStreamer'
+        docker-compose exec worker bash 
 
-    After a minute or two you should see output similar to this:  
+  Next, cd to the demo directory and get the app configured to talk to your Kafka cluster:
+
+```
+        cd demo-scene/streams-movie-demo
+        echo "bootstrap.servers=kafka1:9092
+schema.registry.url=http://schemaregistry:8081
+movies.file=../data/movies.dat" > cli-install.properties
+        echo "configPath=/workshop/demo-scene/streams-movie-demo/cli-install.properties
+mainClass=io.confluent.demo.StreamsDemo" > gradle.properties
+```
+
+  Finally, run the ratings streamer. At any point you can ctrl-C to stop ratings, and just re-run this last command to get ratings going again:
+
+        ./gradlew :loader:streamWithJSONRatingStreamer'
+
+  When the script is running, the output should look something like this:  
 
         Starting a Gradle Daemon, 1 incompatible and 1 stopped Daemons could not be reused, use --status for details
         Download https://jcenter.bintray.com/org/glassfish/javax.json/1.1.2/javax.json-1.1.2.pom
@@ -315,10 +330,10 @@ _Bonus credit: The connector only captures `INSERT`s currently. Can you update t
         log4j:WARN Please initialize the log4j system properly.
         log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
         1539005442
-        RATINGS PRODUCED 0
         RATINGS PRODUCED 1
-        RATINGS PRODUCED 105
-        RATINGS PRODUCED 520
+        RATINGS PRODUCED 4
+        RATINGS PRODUCED 8
+        RATINGS PRODUCED 13
         [...]    
 
 8. In KSQL, create a KSQL stream to represent the ratings: 
