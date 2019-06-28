@@ -305,12 +305,20 @@ _Bonus credit: The connector only captures `INSERT`s currently. Can you update t
 
   Next, cd to the demo directory and get the app configured to talk to your Kafka cluster:
 
-```
         cd demo-scene/streams-movie-demo
-        echo "bootstrap.servers=kafka1:9092
+
+  Then configure the first properties file by copying and pasting this command into the terminal:
+
+```
+echo "bootstrap.servers=kafka1:9092
 schema.registry.url=http://schemaregistry:8081
 movies.file=../data/movies.dat" > cli-install.properties
-        echo "configPath=/workshop/demo-scene/streams-movie-demo/cli-install.properties
+```
+
+  Then the second in the same way:
+  
+```
+echo "configPath=/workshop/demo-scene/streams-movie-demo/cli-install.properties
 mainClass=io.confluent.demo.StreamsDemo" > gradle.properties
 ```
 
