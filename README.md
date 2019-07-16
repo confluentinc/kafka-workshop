@@ -74,7 +74,7 @@ If you're reading this, you probably know where to find the repo with the instru
                  -C \
                  -t movies-raw
 
-6. Go back to the producer terminal tab and send two records to the topic using `tail -n 2`. (It's okay that one of these is a duplicate.)
+6. Go back to the producer terminal tab and send two records as shown. (It's okay that one of these is a duplicate.)
 
         docker-compose exec worker \
         kafkacat -b kafka1:9092 \
@@ -324,7 +324,7 @@ mainClass=io.confluent.demo.StreamsDemo" > gradle.properties
 
   Finally, run the ratings streamer. At any point you can ctrl-C to stop ratings, and just re-run this last command to get ratings going again:
 
-        ./gradlew :loader:streamWithJSONRatingStreamer'
+        ./gradlew :loader:streamWithJSONRatingStreamer
 
   When the script is running, the output should look something like this:  
 
