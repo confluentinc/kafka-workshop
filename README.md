@@ -134,17 +134,20 @@ Now check that the connector's been created:
 
 ```
 docker-compose exec connect bash -c 'curl -s "http://localhost:8083/connectors"'
-
-["jdbc_source_postgres_movies"]
 ```
+expected output:
+
+> ["jdbc_source_postgres_movies"]
 
 and that it is running successfully: 
 
 ```
 docker-compose exec connect bash -c 'curl -s "http://localhost:8083/connectors/jdbc_source_postgres_movies/status"'
-
-{"name":"jdbc_source_postgres_movies","connector":{"state":"RUNNING","worker_id":"kafka-connect:8083"},"tasks":[{"state":"RUNNING","id":0,"worker_id":"kafka-connect:8083"}],"type":"source"}
 ```
+expected output:
+
+> {"name":"jdbc_source_postgres_movies","connector":{"state":"RUNNING","worker_id":"kafka-connect:8083"},"tasks":[{"state":"RUNNING","id":0,"worker_id":"kafka-connect:8083"}],"type":"source"}
+
 
 ---
 
