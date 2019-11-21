@@ -8,7 +8,7 @@ services:
   #     - kafka1
   #   command: "bash -c 'sleep infinity'"
   #   volumes: 
-  #     - $PWD/worker/data:/data
+  #     - ./worker/data:/data
       
   worker:
     image: tlberglund/kafka-workshop-worker:latest
@@ -18,7 +18,7 @@ services:
       - kafka1
     command: "bash -c 'sleep infinity'"
     volumes: 
-      - $PWD/worker/data:/data
+      - ./worker/data:/data
 
   ksql-cli:
     image: confluentinc/cp-ksql-cli:5.2.1
